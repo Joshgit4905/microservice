@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CampusRide · Rides</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">CR</span> CampusRide <span class="module">Rides module</span></div>
+    <div id="session-area" class="session"></div>
+  </header>
+
+  <main class="layout">
+    <section class="col-main">
+      <div class="section-head">
+        <h1>Upcoming rides to campus</h1>
+        <form id="filters" class="filters">
+          <label>Date <input type="date" name="date"></label>
+          <label class="check"><input type="checkbox" name="available"> Only with seats</label>
+          <button type="submit" class="btn ghost">Filter</button>
+        </form>
+      </div>
+      <div id="rides" class="rides" aria-live="polite"></div>
+    </section>
+
+    <aside class="col-side">
+      <section id="login-card" class="card">
+        <h2>Log in</h2>
+        <form id="login-form" class="stack">
+          <label>Email <input name="email" type="email" autocomplete="username" required></label>
+          <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="btn" type="submit">Log in</button>
+        </form>
+        <p class="hint">Demo accounts (test data, see README):</p>
+        <div class="demo-users">
+          <button class="chip" data-email="ana@campusride.test" data-pass="Driver123!">Ana · driver</button>
+          <button class="chip" data-email="luis@campusride.test" data-pass="Rider123!">Luis · student</button>
+        </div>
+      </section>
+
+      <section id="offer-card" class="card hidden">
+        <h2>Offer a ride</h2>
+        <form id="offer-form" class="stack">
+          <label>Pickup point <input name="originName" required minlength="3" maxlength="120" placeholder="Plaza de Armas"></label>
+          <div class="row">
+            <label>Latitude <input name="lat" type="number" step="any" required value="20.5931"></label>
+            <label>Longitude <input name="lng" type="number" step="any" required value="-100.3896"></label>
+          </div>
+          <label>Destination <input name="destination" required minlength="3" value="Main campus"></label>
+          <label>Departure <input name="departure" type="datetime-local" required></label>
+          <div class="row">
+            <label>Seats <input name="seats" type="number" min="1" max="6" value="3" required></label>
+            <label>Price / seat (MXN) <input name="price" type="number" min="0" max="500" value="25" required></label>
+          </div>
+          <button class="btn" type="submit">Publish ride</button>
+        </form>
+      </section>
+
+      <section id="bookings-card" class="card hidden">
+        <h2>My bookings</h2>
+        <ul id="bookings" class="bookings"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>

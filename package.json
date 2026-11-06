@@ -1,0 +1,14 @@
+{
+  "name": "campusride",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CampusRide: main web app + rides microservice (Unit 3 · Evidence 3)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "setup": "npm install --prefix rides-service && npm install --prefix web-app && node scripts/setup-env.js",
+    "start": "node scripts/start-all.js",
+    "start:service": "npm start --prefix rides-service",
+    "start:web": "npm start --prefix web-app",
+    "test": "npm test --prefix rides-service"
+  }
+}

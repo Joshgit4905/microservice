@@ -1,0 +1,128 @@
+### CampusRide rides-service · request collection
+### Open in VS Code with the "REST Client" extension and click "Send Request" over each block.
+### Start the service first (npm start). Expected status is written above each request.
+
+@base = http://localhost:4000/api/v1
+
+### 1. Health check  -> 200
+GET {{base}}/health
+
+### 2. Login as Ana (driver)  -> 200 { accessToken, tokenType, expiresIn, user }
+# @name loginAna
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "ana@campusride.test", "password": "Driver123!" }
+
+###
+@anaToken = {{loginAna.response.body.accessToken}}
+
+### 3. Login as Luis (student)  -> 200
+# @name loginLuis
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "luis@campusride.test", "password": "Rider123!" }
+
+###
+@luisToken = {{loginLuis.response.body.accessToken}}
+
+### 4. Login with wrong password  -> 401 "Invalid email or password"
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "ana@campusride.test", "password": "wrong-password" }
+
+### 5. Login with invalid body  -> 400 VALIDATION_ERROR (email, password)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "not-an-email" }
+
+### 6. Malformed JSON  -> 400 INVALID_JSON (no stack trace)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email":
+
+### 7. Current user (protected)  -> 200 { user }
+GET {{base}}/auth/me
+Authorization: Bearer {{luisToken}}
+
+### 8. List rides (public)  -> 200 [ ... ]
+GET {{base}}/rides
+
+### 9. List rides with seats available  -> 200 [ ... ]
+GET {{base}}/rides?available=true&destination=campus
+
+### 10. List rides with invalid filters  -> 400 (date, available)
+GET {{base}}/rides?date=05-11-2026&available=maybe
+
+### 11. Ride detail  -> 200
+GET {{base}}/rides/1
+
+### 12. Ride that does not exist  -> 404
+GET {{base}}/rides/999
+
+### 13. Invalid id  -> 400
+GET {{base}}/rides/abc
+
+### 14. Publish a ride WITHOUT token  -> 401 "Missing or malformed Authorization header"
+POST {{base}}/rides
+Content-Type: application/json
+
+{ "origin": { "name": "Plaza de Armas", "lat": 20.5931, "lng": -100.3896 }, "destination": "Main campus", "departureTime": "2030-01-10T07:30:00-06:00", "seats": 3, "pricePerSeat": 25 }
+
+### 15. Publish a ride with a MODIFIED token  -> 401 "Invalid token"
+POST {{base}}/rides
+Content-Type: application/json
+Authorization: Bearer {{anaToken}}x
+
+{ "origin": { "name": "Plaza de Armas", "lat": 20.5931, "lng": -100.3896 }, "destination": "Main campus", "departureTime": "2030-01-10T07:30:00-06:00", "seats": 3, "pricePerSeat": 25 }
+
+### 16. Publish a ride (protected) -> 201 + Location header + weather from Open-Meteo
+### Change departureTime to a date within the next 15 days to get a real forecast;
+### dates further away return weather.status = "unavailable" (the ride is still created).
+# @name newRide
+POST {{base}}/rides
+Content-Type: application/json
+Authorization: Bearer {{anaToken}}
+
+{ "origin": { "name": "Jardín Guerrero", "lat": 20.5925, "lng": -100.3938 }, "destination": "Main campus", "departureTime": "2030-01-10T07:30:00-06:00", "seats": 3, "pricePerSeat": 20 }
+
+### 17. Publish a ride with invalid data  -> 400 with one detail per field
+POST {{base}}/rides
+Content-Type: application/json
+Authorization: Bearer {{anaToken}}
+
+{ "origin": { "name": "X", "lat": 200 }, "destination": "", "departureTime": "yesterday", "seats": 10, "pricePerSeat": -5 }
+
+### 18. Live forecast for ride 1 (third-party API)  -> 200, or 503 WEATHER_UNAVAILABLE if Open-Meteo fails
+GET {{base}}/rides/1/weather
+
+### 19. Book a seat as Luis (protected)  -> 201
+POST {{base}}/rides/1/bookings
+Authorization: Bearer {{luisToken}}
+
+### 20. Book the same ride again  -> 409 "You already have a seat in this ride"
+POST {{base}}/rides/1/bookings
+Authorization: Bearer {{luisToken}}
+
+### 21. Driver books own ride  -> 409
+POST {{base}}/rides/1/bookings
+Authorization: Bearer {{anaToken}}
+
+### 22. My bookings (protected)  -> 200 [ ... ]
+GET {{base}}/bookings
+Authorization: Bearer {{luisToken}}
+
+### 23. Luis tries to cancel Ana's ride  -> 403
+DELETE {{base}}/rides/1
+Authorization: Bearer {{luisToken}}
+
+### 24. Ana cancels her ride  -> 204 (no body)
+DELETE {{base}}/rides/{{newRide.response.body.id}}
+Authorization: Bearer {{anaToken}}
+
+### 25. Unknown route  -> 404
+GET {{base}}/drivers
